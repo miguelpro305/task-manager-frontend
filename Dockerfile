@@ -4,11 +4,12 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package.json and package-lock.json explicitly
-COPY package.json package-lock.json .  
-RUN npm install --frozen-lockfile    # Install dependencies
+COPY package.json package-lock.json /app/
+RUN npm install --frozen-lockfile --legacy-peer-deps  # Install dependencies
 
-COPY . .                            # Copy the rest of the application code
-RUN npm run build                    # Build the frontend app
+# Copy the rest of the application code
+COPY . /app/
+RUN npm run build  # Build the frontend app
 
 # Stage 2: Serve the app with Nginx
 FROM nginx:alpine
@@ -17,7 +18,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy Nginx configuration
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Ensure Nginx has appropriate permissions
 RUN chown -R nginx:nginx /usr/share/nginx/html
